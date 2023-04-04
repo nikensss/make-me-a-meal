@@ -2,17 +2,30 @@ import { SignInButton, SignOutButton, useUser } from '@clerk/nextjs';
 import { type NextPage } from 'next';
 import Head from 'next/head';
 import Image from 'next/image';
+import { useState } from 'react';
 
 import { api } from '~/utils/api';
 
 const Home: NextPage = () => {
-  const {
-    data: completion,
-    isLoading: isCompletionLoading,
-    isLoadingError: isCompletionLoadingError,
-    error: completionError,
-  } = api.gpt.ask.useQuery({ text: 'hello' });
+  const [input, setInput] = useState('');
+  const [steps, setSteps] = useState<string[]>([]);
+  const [error, setError] = useState('');
 
+  const { mutate, isLoading } = api.gpt.ask.useMutation({
+    onSuccess: ({ steps }) => {
+      setSteps(steps);
+    },
+    onError: (e) => {
+      setSteps([]);
+      setInput('');
+      const errorMessage = e.data?.zodError?.fieldErrors.content;
+      if (errorMessage && errorMessage[0]) {
+        setError(errorMessage[0]);
+      } else {
+        setError('Oops! Something went wrong.');
+      }
+    },
+  });
   const user = useUser();
 
   return (
@@ -24,7 +37,7 @@ const Home: NextPage = () => {
       </Head>
       <main className="flex h-screen justify-center">
         <div className="h-full w-full border-x border-slate-600 md:max-w-5xl">
-          <div className="flex justify-end border-b border-slate-600 p-4">
+          <div className="flex h-24 justify-end border-b border-slate-600 p-4">
             <div className="flex grow items-center gap-4">
               {user.isSignedIn && (
                 <>
@@ -44,22 +57,38 @@ const Home: NextPage = () => {
             {user.isSignedIn ? <SignOutButton /> : <SignInButton />}
           </div>
           {user.isSignedIn && (
-            <div className="flex h-full flex-col">
-              {isCompletionLoading && (
-                <div className="flex justify-center p-4">
+            <div className="flex flex-col items-center justify-center p-2">
+              <div className="relative my-3 w-full">
+                <input
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key !== 'Enter') return;
+                    e.preventDefault();
+                    if (input === '') return;
+                    setSteps([]);
+                    setError('');
+                    mutate({ text: input });
+                  }}
+                  disabled={isLoading}
+                  id="input-group-1"
+                  className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 pr-10 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-blue-500  dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
+                  placeholder="What's on your fridge?"
+                />
+                <InputMessage />
+              </div>
+              {isLoading && (
+                <div className="flex items-center justify-center">
                   <LoadingSpinner />
                 </div>
               )}
-              {isCompletionLoadingError && (
-                <p>{JSON.stringify(completionError, null, 2)}</p>
-              )}
-              {!isCompletionLoading && (
-                <div className="p-4">
-                  {completion?.steps.map((c) => (
-                    <p key={c}>{c}</p>
-                  ))}{' '}
-                </div>
-              )}
+              <div className="w-full">
+                {!error &&
+                  steps.length > 0 &&
+                  steps.map((step, i) => <p key={i}>{step}</p>)}
+              </div>
+              <div>{error && <p>{error}</p>}</div>
             </div>
           )}
         </div>
@@ -90,6 +119,28 @@ const LoadingSpinner = () => {
         />
       </svg>
       <span className="sr-only">Loading...</span>
+    </div>
+  );
+};
+
+const InputMessage = () => {
+  return (
+    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+      <svg
+        stroke="currentColor"
+        fill="none"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        className="mr-1 h-4 w-4 text-slate-500"
+        height="1em"
+        width="1em"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <line x1="22" y1="2" x2="11" y2="13"></line>
+        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+      </svg>
     </div>
   );
 };

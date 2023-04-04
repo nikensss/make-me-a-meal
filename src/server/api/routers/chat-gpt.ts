@@ -17,10 +17,10 @@ export const chatGptRouter = createTRPCRouter({
 
         const completion = await openai.createCompletion({
           model: 'text-davinci-003',
-          max_tokens: 1792,
-          prompt: `If the following is a list of ingredients, suggest a recipe and give me a guide step by step: 
-              "${input.text.trim().replace(/\n/, ',')}". 
-                If it is not a list of ingredients, then return a message indicating a list of ingredients should've been provided.\n\n`,
+          max_tokens: 2000,
+          prompt: `If the following is not a list of ingredients, say a list of ingredients must be provided:
+              "${input.text.replace(/\"/, '')}". 
+                But if it is a list of ingredients, then provide a recipe and a step by step guide.\n\n`,
         });
         const choices = completion.data.choices.map(({ text }) => text).join();
 

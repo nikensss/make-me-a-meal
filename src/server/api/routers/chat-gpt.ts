@@ -1,12 +1,19 @@
+import { TRPCError } from '@trpc/server';
+import { Configuration, OpenAIApi } from 'openai';
 import { z } from 'zod';
 import { createTRPCRouter, publicProcedure } from '~/server/api/trpc';
-import { Configuration, OpenAIApi } from 'openai';
 
 export const chatGptRouter = createTRPCRouter({
   ask: publicProcedure
     .input(z.object({ text: z.string() }))
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       try {
+        if (!ctx.userId) throw new TRPCError({ code: 'UNAUTHORIZED' });
+
+        if (ctx.userId) {
+          return { steps: ['1. First step', '2. Second step'], input };
+        }
+
         const configuration = new Configuration({
           apiKey: process.env.OPENAI_API_KEY,
         });

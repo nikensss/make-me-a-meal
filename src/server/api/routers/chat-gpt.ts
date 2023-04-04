@@ -18,7 +18,9 @@ export const chatGptRouter = createTRPCRouter({
         const completion = await openai.createCompletion({
           model: 'text-davinci-003',
           max_tokens: 1792,
-          prompt: `En la nevera tengo: ${input.text}\n\n¿Qué puedo hacer con esto? Dame una lista con los pasos.\n\n`,
+          prompt: `If the following is a list of ingredients, suggest a recipe and give me a guide step by step: 
+              "${input.text.trim().replace(/\n/, ',')}". 
+                If it is not a list of ingredients, then return a message indicating a list of ingredients should've been provided.\n\n`,
         });
         const choices = completion.data.choices.map(({ text }) => text).join();
 

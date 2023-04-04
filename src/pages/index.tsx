@@ -33,7 +33,7 @@ const Home: NextPage = () => {
       <Head>
         <title>Make Me a Meal</title>
         <meta name="description" content="Get a meal suggestion!" />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/meal-svgrepo-com.svg" />
       </Head>
       <main className="flex h-screen justify-center">
         <div className="h-full w-full border-x border-slate-600 md:max-w-5xl">

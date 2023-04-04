@@ -16,14 +16,17 @@ export const chatGptRouter = createTRPCRouter({
           model: 'text-davinci-003',
           max_tokens: 1792,
           prompt:
-            'En mi nevera tengo arroz, tomate, cebolla, pollo vegano y pepino. Quiero hacer una receta con estos ingredientes. ¿Qué puedo hacer?',
+            'En mi nevera tengo arroz, tomate, cebolla, pollo vegano y pepino. Quiero hacer una receta con estos ingredientes. ¿Qué puedo hacer? Proporciona los pasos en una lista.',
         });
-        const choices = completion.data.choices.map((choice) => choice.text);
+        const choices = completion.data.choices.map(({ text }) => text).join();
 
-        return { choices, input };
+        return {
+          steps: choices.split('\n').filter((e) => !!e),
+          input,
+        };
       } catch (e) {
         console.error(e);
-        return null;
+        return { steps: [], input };
       }
     }),
 });

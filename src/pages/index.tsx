@@ -31,7 +31,10 @@ const Home: NextPage = () => {
         <div>
           {isCompletionLoadingError && JSON.stringify(completionError, null, 2)}
         </div>
-        <div>{!isCompletionLoading && completion?.choices}</div>
+        <div>
+          {!isCompletionLoading &&
+            completion?.steps.map((c) => <p key={c}>{c}</p>)}
+        </div>
       </main>
     </>
   );
